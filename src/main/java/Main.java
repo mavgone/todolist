@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.util.stream.Collectors;
 
 
 class Main {
@@ -196,36 +197,22 @@ class Main {
     }
 
     public static void saveTask(ArrayList<Task> tasks) {
-        if (tasks.isEmpty()) {
-            clear();
-            System.out.println("бездельник нет заданий у тя\n");
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        for (Task task : tasks) {
-            sb.append(task.getId())
-                    .append(". ")
-                    .append(task.getDescription())
-                    .append(" || ");
-
-            if (task.getIsComplete()) {
-                sb.append("Выполнена");
-            } else {
-                sb.append("Не выполнена");
+            if (tasks.isEmpty()) {
+                System.out.println("нема задач");
+                return;
             }
 
-            sb.append("\n");
-        }
+            try {
+                String content = tasks.stream()
+                        .map(Task::toString)
+                        .collect(Collectors.joining("\n")) + "\n";
+                Files.writeString(Path.of("tasks.txt"), content);
+                System.out.println("ура сохранено");
 
-        try {
-            Files.writeString(Path.of("tasks.txt"), sb.toString());
-            System.out.println("ура успешно сохранил");
-        } catch (IOException e) {
-            System.out.println("произошла ашибочка");
+            } catch (IOException e) {
+                System.out.println("ашибачка " + e.getMessage());
+            }
         }
-    }
 
     public static void loadFromTxt(ArrayList<Task> tasks) {
         try {
