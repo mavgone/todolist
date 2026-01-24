@@ -205,18 +205,80 @@ class Main {
         StringBuilder sb = new StringBuilder();
 
         for (Task task : tasks) {
-            sb.append(task.getId()).append(". ")
+            sb.append(task.getId())
+                    .append(". ")
                     .append(task.getDescription())
-                    .append(" || ")
-                    .append(task.getIsComplete() ? "Выполнена" : "Не выполнена")
-                    .append("\n");
+                    .append(" || ");
+
+            if (task.getIsComplete()) {
+                sb.append("Выполнена");
+            } else {
+                sb.append("Не выполнена");
+            }
+
+            sb.append("\n");
         }
 
         try {
             Files.writeString(Path.of("tasks.txt"), sb.toString());
-            System.out.println("Задачи сохранены в tasks.txt");
+            System.out.println("ура успешно сохранил");
         } catch (IOException e) {
             System.out.println("произошла ашибочка");
+        }
+    }
+
+    public static void loadFromTxt(ArrayList<Task> tasks) {
+        try {
+            Path filePath = Path.of("tasks.txt");
+            if (!Files.exists(filePath)) {
+                clear();
+                System.out.println("файла tasks.txt нету\n");
+                return;
+            }
+
+            String content = Files.readString(filePath);
+            String[] lines = content.split("\n");
+
+            ArrayList<Task> loadedTasks = new ArrayList<>();
+
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
+
+                try {
+                    String[] firstSplit = line.split("\\. ", 2);
+                    if (firstSplit.length < 2) continue;
+
+                    int id = Integer.parseInt(firstSplit[0]);
+                    String rest = firstSplit[1];
+
+                    String[] secondSplit = rest.split(" \\|\\| ");
+                    if (secondSplit.length < 2) continue;
+
+                    String description = secondSplit[0];
+                    String status = secondSplit[1].trim();
+                    boolean isComplete = status.equals("Выполнена");
+
+                    Task task = new Task(description, isComplete, id);
+                    loadedTasks.add(task);
+
+                } catch (Exception e) {
+                    System.out.println("Ошибка парсинга строки: " + line);
+                }
+            }
+
+            tasks.clear();
+            tasks.addAll(loadedTasks);
+
+            for (int i = 0; i < tasks.size(); i++) {
+                tasks.get(i).setId(i + 1);
+            }
+
+            clear();
+            System.out.println("Задачи загружены из tasks.txt (" + tasks.size() + " задач)");
+
+        } catch (IOException e) {
+            clear();
+            System.out.println("произошла ашибочка при чтении файла");
         }
     }
 
@@ -253,6 +315,7 @@ class Main {
             System.out.println("3. Удалить задачу");
             System.out.println("4. Редактировать задачу");
             System.out.println("5. Сохранить в txt");
+            System.out.println("6. Загрузить из txt");
             System.out.println("6. Сохранить в json");
             System.out.println("0. Выход\n");
 
@@ -277,6 +340,9 @@ class Main {
                         saveTask(task_list);
                         continue;
                     case 6:
+                        loadFromTxt(task_list);
+                        continue;
+                    case 7:
                         saveInJson(task_list);
                         continue;
                     case 0:
